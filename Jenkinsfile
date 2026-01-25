@@ -1,7 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        VENV_DIR = "venv"
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -13,18 +18,21 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                    echo "Installing python3-venv if missing..."
-                    sudo apt-get update && sudo apt-get install -y python3.12-venv python3-pip
+                    echo "Creating virtual environment..."
+                    python3 -m venv $VENV_DIR
 
-                    echo "Setting up virtual environment..."
-                    python3 -m venv venv
-                    . venv/bin/activate
+                    echo "Activating venv..."
+                    . $VENV_DIR/bin/activate
 
                     echo "Upgrading pip..."
                     pip install --upgrade pip
 
-                    echo "Installing dependencies from requirements.txt..."
-                    pip install -r requirements.txt
+                    if [ -f requirements.txt ]; then
+                        echo "Installing dependencies..."
+                        pip install -r requirements.txt
+                    else
+                        echo "No requirements.txt found"
+                    fi
                 '''
             }
         }
@@ -33,8 +41,13 @@ pipeline {
             steps {
                 sh '''
                     echo "Running tests..."
-                    . venv/bin/activate
-                    pytest || echo "No tests found"
+                    . $VENV_DIR/bin/activate
+
+                    if command -v pytest >/dev/null 2>&1; then
+                        pytest
+                    else
+                        echo "pytest not installed, skipping tests"
+                    fi
                 '''
             }
         }
@@ -42,11 +55,22 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    echo "Starting Flask app..."
-                    . venv/bin/activate
+                    echo "Deploying application..."
+                    . $VENV_DIR/bin/activate
+
+                    pkill -f app.py || true
                     nohup python3 app.py > app.log 2>&1 &
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully"
+        }
+        failure {
+            echo "❌ Pipeline failed"
         }
     }
 }
