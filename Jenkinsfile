@@ -13,10 +13,17 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
+                    echo "Installing python3-venv if missing..."
+                    sudo apt-get update && sudo apt-get install -y python3.12-venv python3-pip
+
                     echo "Setting up virtual environment..."
                     python3 -m venv venv
                     . venv/bin/activate
+
+                    echo "Upgrading pip..."
                     pip install --upgrade pip
+
+                    echo "Installing dependencies from requirements.txt..."
                     pip install -r requirements.txt
                 '''
             }
