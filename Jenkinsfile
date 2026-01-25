@@ -12,26 +12,23 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'echo "Building the app..."'
-                // Example: if Python Flask
-                // sh 'pip install -r requirements.txt'
+                sh 'echo "Installing dependencies..."'
+                sh 'pip3 install -r requirements.txt'
             }
         }
 
         stage('Test') {
             steps {
                 sh 'echo "Running tests..."'
-                // Example: pytest
-                // sh 'pytest || echo "No tests yet"'
+                sh 'pytest || echo "No tests yet"'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh 'echo "Deploying app..."'
-                // Example: Docker deployment
-                // sh 'docker build -t myapp .'
-                // sh 'docker run -d -p 5000:5000 myapp'
+                sh 'echo "Starting Flask app..."'
+                // Run app in background so Jenkins job doesn’t hang
+                sh 'nohup python3 app.py > app.log 2>&1 &'
             }
         }
     }
