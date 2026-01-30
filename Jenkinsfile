@@ -1,11 +1,11 @@
 pipeline {
   agent any
 
-  stages {
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/akranthi113/practicedevops.git'
-      }
+ stage('Checkout') {
+    steps {
+        git branch: 'main', url: 'https://github.com/akranthi113/practicedevops.git'
+    }
+}
     }
 
     stage('Build Image') {
